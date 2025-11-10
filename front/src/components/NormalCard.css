@@ -1,0 +1,151 @@
+/* กล่องการ์ดหลัก */
+.normal-card {
+  border: 2px solid #808080;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+/* แถวบนของกล่องขาว */
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 0 14px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 18px;
+  color: #111;
+}
+
+/* รูป */
+.card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+  margin: 10px 14px 0 14px;
+}
+
+/* เนื้อหา */
+.card-content {
+  padding: 12px 14px 16px 14px;
+}
+
+.desc { margin-top: 6px; }
+
+/* ----- Status badge ในกล่องขาว ----- */
+.status-badge {
+  display: inline-block;
+  position: static;       /* สำคัญ: ไม่ให้ลอยออกนอกกรอบ */
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* โทนสีตามสถานะ (ใช้ class ที่แปลงแล้ว) */
+.status-badge.pending {
+  background: #fff7ce;
+  color: #b99d00;
+  border: 1px solid #f9b800;
+}
+.status-badge.approved {
+  background: #e0ffe9;
+  color: #0b864b;
+  border: 1px solid #00c853;
+}
+.status-badge.failed, .status-badge.rejected {
+  background: #ffe6e6;
+  color: #d32f2f;
+  border: 1px solid #f44336;
+}
+.status-badge.draft {
+  background: #d0d0d0;
+  color: #484848;
+  border: 1px solid #454545;
+}
+.status-badge.inprocess{
+  background: #b4e1ff;
+  color: #457391;
+  border: 1px solid #487797;
+}
+
+/* ปุ่มแก้ไข/ลบ */
+.edit-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.edit-buttons a,
+.edit-buttons button {
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.1);
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  cursor: pointer;
+}
+
+/* สวิตช์ Visibility (ง่าย ๆ) */
+.switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  user-select: none;
+  justify-content: flex-start; /* ✅ จัดแนวให้อยู่ต้นบรรทัดแต่ไม่ชิดซ้ายสุด */
+  padding-left: 10px;   
+}
+.switch-label input { 
+  display: none; 
+}
+/* ✅ ตั้ง container ของการ์ดให้เป็น relative เพื่อให้จัดตำแหน่งลูกได้ */
+.card-content {
+  position: relative;
+  padding: 15px;
+}
+
+/* ✅ วาง toggle switch ไว้มุมล่างซ้าย */
+.visibility-control {
+  position: absolute;
+  bottom: 10px;
+  left: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slider {
+  position: relative;
+  width: 44px; height: 24px;
+  background: #ccc;
+  border-radius: 999px;
+  transition: .2s;
+}
+.slider::after {
+  content: "";
+  position: absolute;
+  width: 18px; height: 18px;
+  top: 3px; left: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: .2s;
+}
+input:checked + .slider { background: #22c55e; }
+input:checked + .slider::after { transform: translateX(20px); }
+
+.private-text, .public-text { font-size: 12px; color: #555; }
+
+/* NormalCard.css (เติมไว้ท้ายไฟล์) */
+.card-link-wrapper {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}

@@ -1,0 +1,215 @@
+/* ===== FONT IMPORT MUST BE FIRST ===== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* ===== CSS VARIABLES ===== */
+:root {
+  --yellow: #f7b500;
+  --blue:   #5b8db8;
+  --orange: #ff6b2b;
+  --pink:   #ffc1cc;
+  --green:  #009a65;
+
+  --text:  #1f2937;
+  --muted: #6b7280;
+  --paper: #fffaf0;
+  --line:  #f1f59;
+}
+
+/* ===== RESET & BASE ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Poppins", sans-serif; background: #fff8dc; color: #222; }
+.flex { display: flex; }
+
+.main-container { flex: 1; padding: 24px; }
+
+/* ===== SIDEBAR (shared) ===== */
+/* ===== SIDEBAR (shared) ===== */
+.sidebar {
+  font-family: sans-serif;            
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  width: 250px;
+  height: 100vh;
+  box-shadow: 3px 0 12px rgba(0,0,0,.1);
+  position: fixed; left: 0; top: 0;
+  background-color: #f7b500; /* เพิ่มสีพื้นหลังให้ sidebar */
+  color: #fff;
+  border-radius: 10px;  /* เพิ่มมุมโค้ง */
+}
+
+.profile { text-align: center; margin-bottom: 40px; }
+.profile .circle {
+  background: #fff;
+  color: inherit; /* สีจะมาจากธีม role */
+  font-size: 36px;
+  border-radius: 50%;
+  width: 70px; height: 70px;
+  display: grid; place-items: center;
+  margin: 0 auto 12px;
+}
+
+.sidebar h3 {
+  font-family: sans-serif;
+  font-weight: 600; letter-spacing: .5px;
+}
+
+/* ===== ลบเส้นใต้และสีม่วงของลิงก์ทั้งหมดใน sidebar ===== */
+.sidebar a {
+  text-decoration: none;      /* ลบเส้นใต้ */
+  color: inherit;             /* ใช้สีตาม parent */
+  padding: 16px 20px;         /* เพิ่ม padding เพื่อทำให้คลิกง่าย */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.3s, padding-left 0.3s;
+  position: relative;
+  background-color: #f9b800;  /* สีพื้นหลังของปุ่ม */
+}
+
+/* ปรับสีเมื่อ hover */
+.sidebar a:hover {
+  background-color: #ffffff;  /* สีส้มเมื่อ hover */
+  color: #000000;                /* เปลี่ยนสีข้อความ */
+  padding-left: 20px;         /* ขยายเมื่อ hover */
+}
+
+.sidebar a:active {
+  background-color: #ff9809;  /* สีเมื่อคลิก */
+  color: #fff;
+}
+
+.sidebar a svg {
+  margin-right: 10px;  /* ระยะห่างระหว่างไอคอนและข้อความ */
+  width: 20px;
+  height: 20px;
+}
+
+.role {
+  background: #fff;
+  color: inherit;  /* สีตามธีม */
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+  font-family: sans-serif;
+}
+
+.menu {
+  list-style-type: none;  /* ลบจุด bullet */
+  padding: 0;
+}
+
+.menu li {
+  background: rgba(255,255,255,.15);
+  margin: 6px 0; 
+  padding: 10px 14px;
+  border-radius: 12px; 
+  text-align: center;
+  font-weight: 500; 
+  cursor: pointer; 
+  transition: .2s;
+}
+.menu li:hover { 
+  background: #fff; 
+  color: #959595; 
+}
+
+
+
+
+
+
+.pill:hover { background: #a4a3a1; border: 1px solid #000; }
+
+/* ===== GRID & CARD ===== */
+.grid {
+  margin-left: 270px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr));
+  gap: 20px;
+}
+.card {
+  background: #fff; border: 2px solid #808080; border-radius: 16px; padding: 14px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,.12); }
+.card img {
+  width: 100%; height: 150px; border-radius: 10px; object-fit: cover; margin-bottom: 10px;
+}
+.no-image { background: #eee; width: 100%; height: 150px; border-radius: 10px;
+  display: grid; place-items: center; color: #999; margin-bottom: 10px; }
+.card h3 { font-size: 17px; color: #111; margin-bottom: 4px; }
+.card p  { font-size: 14px; color: #444; margin-bottom: 3px; }
+.card .desc { margin: 4px 0 6px; }
+.tags { display: flex; gap: 8px; margin-top: 6px; }
+.tags span { font-size: 12px; background: #fff2c2; color: #b97d00; padding: 2px 8px; border-radius: 10px; border: 1px solid #f9b800; }
+
+/* ===== ROLE THEMES ===== */
+.role-student .sidebar { background-color: var(--yellow); }
+.role-student .profile .circle { color: var(--yellow); }
+.role-student .role { color: #000000; }
+.role-student .pill:hover { background-color: var(--green); color: #fff; } /* ← แก้ selector */
+
+.role-recruiter .sidebar { background-color: var(--green); }
+.role-recruiter .profile .circle { color: var(--green); }
+.role-recruiter .role { color: #000; }
+.role-recruiter .pill:hover { background-color: var(--green); color: #fff; }
+.role-recruiter .sidebar a {background-color: #009a65;}
+.role-recruiter .sidebar a:hover {
+  background-color: #ffffff;  /* สีส้มเมื่อ hover */
+  color: #000000;                /* เปลี่ยนสีข้อความ */
+  padding-left: 20px;         /* ขยายเมื่อ hover */
+}
+
+.role-advisor .sidebar { background-color: var(--pink); }
+.role-advisor .profile .circle { color: var(--pink); }
+.role-advisor .role { color: #000; }
+.role-advisor .pill:hover { background-color: var(--pink); color: #fff; }
+.role-advisor .sidebar a {background-color: #ffc1cc;}
+.role-advisor .sidebar a:hover {
+  background-color: #ffffff;  /* สีส้มเมื่อ hover */
+  color: #000000;                /* เปลี่ยนสีข้อความ */
+  padding-left: 20px;         /* ขยายเมื่อ hover */
+}
+.role-super .sidebar { background-color: var(--yellow); }
+.role-super .profile .circle { color: var(--yellow); }
+.role-super .role { color: #000; }
+.role-super .pill:hover { background-color: var(--yellow); color: #fff; }
+.role-super .sidebar a {background-color: #f9b800;}
+.role-super .sidebar a:hover {
+  background-color: #ffffff;  /* สีส้มเมื่อ hover */
+  color: #000000;                /* เปลี่ยนสีข้อความ */
+  padding-left: 20px;         /* ขยายเมื่อ hover */
+}
+/* ===== TABLES (Verify Pages) ===== */
+.page-title   { font-size: 24px; font-weight: 700; margin-left: 270px; margin-bottom: 6px; color: #222; }
+.page-subtitle{ font-size: 14px; margin-left: 270px; color: #555; margin-bottom: 20px; }
+
+.verify-table {
+  margin-left: 270px; width: calc(100% - 300px);
+  border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 6px 14px rgba(0,0,0,.08);
+}
+.verify-table th { background: #000; color: #fff; padding: 12px; text-align: left; }
+.verify-table td { padding: 12px; border-bottom: 1px solid #000; }
+.verify-table tr:hover { background: #fffbe0; }
+.role-super .verify-table th { background: #000; } /* คงสีหัวตารางของ super */
+
+.status-badge{
+  display:inline-block; padding:4px 10px; border-radius:20px; font-size:13px;
+  font-weight:600; text-transform:capitalize; position:static; margin:0;
+}
+.status-badge.pending  { background:#fff7ce; color:#b99d00; border:1px solid #f9b800; }
+.status-badge.approved { background:#e0ffe9; color:#0b864b; border:1px solid #00c853; }
+.status-badge.rejected { background:#ffe6e6; color:#d32f2f; border:1px solid #f44336; }
+
+/* Buttons */
+.btn-approve, .btn-reject {
+  border:none; padding:6px 12px; border-radius:6px; font-weight:600; cursor:pointer; transition:.2s; margin-right:6px;
+}
+.btn-approve{ background:#00c853; color:#fff; } .btn-approve:hover{ background:#009c3b; }
+.btn-reject { background:#f44336; color:#fff; } .btn-reject:hover { background:#c62828; }

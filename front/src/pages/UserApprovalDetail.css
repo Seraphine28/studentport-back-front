@@ -1,0 +1,178 @@
+/* พื้นหลัง/หัวเรื่อง */
+.approval-page {
+  min-height: 100vh;
+  background: #4e7ca1; /* ฟ้าแบบตัวอย่าง */
+  padding-bottom: 48px;
+  font-family: "Poppins", system-ui, sans-serif;
+  color: #fff;
+}
+
+.approval-header {
+  text-align: center;         /* ✅ จัดกึ่งกลางแนวนอน */
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.back-link {
+  background: transparent;
+  border: none;
+  color: #ffe8f2;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  background: #bebebe;
+  border-radius: 8px;
+  border: 0;
+  font-weight: 700
+
+}
+
+.approval-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sub-row {
+  display: flex;
+  justify-content: center;     /* ✅ ทำให้บรรทัด status อยู่ตรงกลางด้วย */
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e6eefc;
+}
+
+.sub-row b {
+  color: #fff;
+  font-weight: 700;
+}
+
+.dot {
+  font-size: 18px;
+  color: #e6eefc;
+}
+
+/* กล่องฟอร์มหลัก */
+.approval-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 12px 26px rgba(0,0,0,.12);
+  padding: 22px 22px 28px;
+  color: #1f2937;
+}
+
+/* แถวฟอร์ม */
+.form-row {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.form-row.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-item label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.form-item input {
+  width: 100%;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #111827;
+}
+
+/* ป้าย label เต็มบรรทัด */
+.block-label {
+  display: block;
+  font-weight: 600;
+  margin: 4px 0 10px;
+  color: #111827;
+}
+
+/* กล่องรูป “User Card” ตรงกลาง */
+.card-box {
+  display: grid;
+  place-items: center;
+}
+
+.card-box-inner {
+  width: min(720px, 90%);
+  background: #f5f7fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+
+.card-box-inner img {
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 10px;
+  border-radius: 6px;
+}
+
+.card-caption {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* แถวปุ่ม */
+.action-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.btn {
+  min-width: 140px;
+  padding: 10px 16px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  transition: transform .05s ease, filter .15s ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-approve { background: #22c55e; }
+.btn-approve:hover { filter: brightness(1.05); }
+
+.btn-reject { background: #ef4444; }
+.btn-reject:hover { filter: brightness(1.05); }
+
+/* ธีมเพิ่มเผื่ออนาคต (Student/Recruiter) */
+.theme-student .approval-header h1 { /* สีหัวข้อคงเดิม */ }
+.theme-recruiter .approval-header h1 { /* ใช้ชุดเดียวกันได้ */ }
+
+/* Responsive */
+@media (max-width: 780px) {
+  .approval-header h1 { font-size: 34px; }
+  .form-row.two { grid-template-columns: 1fr; }
+}

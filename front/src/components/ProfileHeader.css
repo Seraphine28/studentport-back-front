@@ -1,0 +1,135 @@
+/* --- 0. Wrapper สำหรับ Header (ถ้ามี) --- */
+.profile-header-wrapper { /* 🚨 อาจจะต้องเพิ่ม div นี้ใน ProfileHeader.jsx */
+    display: flex;
+    justify-content: center; /* จัดให้ ProfileHeader อยู่กึ่งกลางแนวนอน */
+    width: 100%;
+    margin-bottom: 20px; /* ระยะห่างจาก Project Cards */
+}
+/* 1. Profile Header Container */
+.profile-header {
+    display: flex;
+    align-items: center;
+    padding: 25px 40px; 
+    background-color: #ff99cc; 
+    border-radius: 15px;
+    gap: 40px; 
+    box-shadow: 0 6px 15px rgba(255, 153, 204, 0.4);
+}
+/* 2. Avatar Wrapper (ห่อวงกลมและปุ่ม Edit) */
+.avatar-wrapper {
+    display: flex;
+    flex-direction: column; /* จัดเรียงวงกลมและปุ่มในแนวตั้ง */
+    align-items: center; /* จัดให้อยู่กึ่งกลาง */
+    flex-shrink: 0;
+    position: relative;
+    gap: 15px;
+}
+/* 3. Avatar Image Container */
+.profile-image-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background-color: white; /* 🚨 พื้นหลังขาว */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* เพิ่มเงาให้ Avatar */ 
+}
+/* 4. Placeholder Image (ถ้ามี) */
+.profile-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+/* 5. ตัวอักษร R (Initial) */
+.profile-initial {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px; /* ขนาดวงกลม */
+    height: 10px;
+    background-color: white; /* สีพื้นหลังเป็นขาว */
+    color: black; /* สีตัว R เป็นดำ*/
+    font-size: 60 px; /* ขนาดตัวอักษร R */
+    font-weight: 700;
+    border-radius: 50%; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    border: none;
+}
+/* 6. Edit Button */
+.edit-button {
+    background-color: white; /* สีเหลือง */
+    color: black;
+    border: none;
+    padding: 8px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    /* จัดวางให้อยู่ใต้ Avatar */
+    margin-top: 10px; 
+    transition: 0.2s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+}
+
+/* 7. Edit Button Hover Effect */
+.edit-button:hover {
+    background-color: white;
+}
+/* 8. Profile Info Container */
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; 
+    align-items: flex-start; /* จัดชิดซ้าย */
+}
+
+/* 9. Name */
+.profile-name {
+    margin: 0 0 10px 0;
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+}
+
+/* 10. University/Contact Containers */
+.profile-university-container,
+.profile-contact-container {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+/* 11. Labels (University/Contact Text) */
+.university-label,
+.contact-label {
+    font-weight: normal;
+    margin-right: 15px;
+    min-width: 90px; 
+    color: white; /* 🚨 สี Label เป็นสีขาว */
+    flex-shrink: 0; 
+    font-size: 1.05rem;
+}
+
+/* 12. Input Boxes (White Background) */
+.profile-university,
+.profile-contact {
+    padding: 8px 12px; /* 🚨 เพิ่ม Padding ให้ Input */
+    background-color: white;
+    color: #333; /* สีตัวอักษรใน Input */
+    font-weight: 400;
+    border-radius: 8px; /* 🚨 เพิ่มความโค้งมน */
+    border: 1px solid #ddd; /* เพิ่มเส้นขอบบางๆ */
+    flex-grow: 1; /* ให้ Input ยืดหดได้เล็กน้อย */
+    max-width: 350px; /* 🚨 กำหนดความกว้างสูงสุดที่ดูดี */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08); /* เพิ่มเงาด้านใน */
+}
+
+/* 13. Contact Margin Fix */
+.profile-contact-container {
+    margin-bottom: 0;
+}
