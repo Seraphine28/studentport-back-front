@@ -1,25 +1,24 @@
 // src/components/AdvisorAdmin/AdvisorReview.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  getPortfolioById,          // GET /api/portfolio/:id
-  advisorApprovePortfolio,   // PUT /api/portfolioadmin/:id/approve
-  advisorRejectPortfolio,    // PUT /api/portfolio/:id/reject  (body: { feedback })
-} from "../../api/adminApi";     // <-- ปรับ path ให้ตรงโปรเจกต์ของหนู
+import { getPortfolioForReview, reviewAdvisor } from "../../api/review";
 
 export default function AdvisorReview() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
 
+
   useEffect(() => {
     (async () => {
+      
       try {
-        const data = await getPortfolioById(id); // ต้องมี token + role AdvisorAdmin
+        const data = await getPortfolioForReview(id, token);
         setPortfolio(data);
       } catch (e) {
         console.error("load portfolio error:", e);
@@ -28,40 +27,41 @@ export default function AdvisorReview() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, token]);
 
   const onApprove = async () => {
-    try {
-      await advisorApprovePortfolio(id); // pending -> in_process
-      alert("✅ ส่งต่อให้ Super Admin แล้ว");
-      navigate("/advisor/verify");       // เปลี่ยนปลายทางตามหน้า list ของหนู
-    } catch (e) {
-      console.error(e);
-      setError("Approve ล้มเหลว (อาจไม่มีสิทธิ์ หรือพอร์ตไม่ใช่สถานะ pending)");
-    }
-  };
+  try {
+    await reviewAdvisor(id, "approve", {}, token);
+    navigate("/advisor/verify");
+  } catch (e) {
+    setError(e.message || "Approve ล้มเหลว");
+  }
+};
+
 
   const onReject = async () => {
-    if (!feedback.trim()) {
-      setError("กรุณาใส่ Feedback ก่อน Reject");
-      return;
-    }
-    try {
-      await advisorRejectPortfolio(id, feedback.trim()); // ต้องอยู่สถานะ pending เท่านั้น
-      alert("❌ Reject แล้ว");
-      navigate("/advisor/verify");
-    } catch (e) {
-      console.error(e);
-      setError("Reject ล้มเหลว (อาจไม่มีสิทธิ์ หรือพอร์ตไม่ใช่สถานะ pending)");
-    }
-  };
+  if (!feedback.trim()) {
+    // ❌ ยังไม่ใส่ feedback → แสดง error บนหน้านี้
+    setError("กรุณาใส่ Feedback ก่อน Reject");
+    return; // หยุด ไม่ navigate
+  }
+  try {
+    await reviewAdvisor(id, "reject", { feedback: feedback.trim() }, token);
+    // ✅ ถ้า reject สำเร็จ → navigate ไป /advisor/verify
+    navigate("/advisor/verify");
+  } catch (e) {
+    // ❌ ถ้า server error → แสดง error บนหน้าเดิม
+    setError(e.message || "Reject ล้มเหลว");
+  }
+};
+
+
 
   if (loading) return <p style={{ textAlign: "center" }}>⏳ Loading...</p>;
-  if (error)   return <p style={{ color: "red", textAlign: "center" }}>{error}</p>;
   if (!portfolio) return <p style={{ textAlign: "center" }}>ไม่พบข้อมูลพอร์ต</p>;
 
   const files = Array.isArray(portfolio.files) ? portfolio.files : [];
-  const fileName = (p) => (typeof p === "string" ? p.split(/[\\/]/).pop() : String(p));
+  const fileName = (f) => (typeof f === "string" ? f.split(/[\\/]/).pop() : f?.name || `file`);
 
   return (
     <div style={{
@@ -90,69 +90,79 @@ export default function AdvisorReview() {
           ::-webkit-scrollbar-thumb { background-color: #bfbfbf; border-radius: 4px; }
         `}</style>
 
-        {/* Title */}
-        <div style={{ marginBottom: 10 }}>
-          <label>Title:</label>
-          <input
-            type="text"
-            value={portfolio.title || ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
+        {error && (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "#ffe6e6",
+              color: "#c62828",
+              border: "1px solid #ffcdd2",
+              fontSize: 14,
+            }}
+          >
+            {error}
+          </div>
+        )}
 
-        {/* University */}
-        <div style={{ marginBottom: 10 }}>
-          <label>University:</label>
-          <input
-            type="text"
-            value={portfolio.university || portfolio.owner?.university || ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
 
-        {/* Year */}
-        <div style={{ marginBottom: 10 }}>
-          <label>Year:</label>
-          <input
-            type="text"
-            value={portfolio.year ?? ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
 
-        {/* Category */}
-        <div style={{ marginBottom: 10 }}>
-          <label>Category:</label>
-          <input
-            type="text"
-            value={portfolio.category || ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
+        {/* Fields */}
+        {["title", "university", "year", "category"].map((key) => (
+          <div key={key} style={{ marginBottom: 10 }}>
+            <label>{key.charAt(0).toUpperCase() + key.slice(1)}:</label>
+            <input
+              type="text"
+              value={key === "university" ? (portfolio.university || portfolio.owner?.university || "") : portfolio[key] || ""}
+              readOnly
+              style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
+            />
+          </div>
+        ))}
 
-        {/* Attached Files */}
+
+        {/* Cover Image */}
+<div style={{ marginBottom: 15 }}>
+  <label>Cover Image:</label>
+  {portfolio.cover_img ? (
+    <img
+      src={portfolio.cover_img}
+      alt="Cover"
+      style={{ maxWidth: "100%", borderRadius: 6, border: "1px solid #ccc" }}
+    />
+  ) : (
+    <div
+      style={{
+        padding: 8,
+        border: "1px solid #ccc",
+        borderRadius: 6,
+        background: "#fff",
+        color: "#222",
+      }}
+    >
+      (no cover image)
+    </div>
+  )}
+</div>
+
+        {/* Files */}
         <div style={{ marginBottom: 15 }}>
           <label>Attached Files:</label>
           {files.length === 0 ? (
             <p>-</p>
           ) : (
             <ul style={{ paddingLeft: 20 }}>
-              {files.map((p, idx) => (
+              {files.map((f, idx) => (
                 <li key={idx}>
-                  <a href="#" onClick={(e)=>e.preventDefault()}>
-                    {fileName(p)}
-                  </a>
+                  <a href={f?.url || "#"} target="_blank" rel="noreferrer">{fileName(f)}</a>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        {/* Description (field จริงคือ desc) */}
+        {/* Description */}
         <div style={{ marginBottom: 15 }}>
           <label>Description:</label>
           <textarea
@@ -162,7 +172,7 @@ export default function AdvisorReview() {
           />
         </div>
 
-        {/* Feedback (จำเป็นสำหรับ Reject) */}
+        {/* Feedback */}
         <div style={{ marginBottom: 15 }}>
           <label>Feedback (for Reject):</label>
           <textarea
@@ -176,16 +186,18 @@ export default function AdvisorReview() {
         {/* Buttons */}
         <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
           <button
+            type="button"
             onClick={onApprove}
             style={{
               backgroundColor: "#4CAF50", border: "none", color: "white",
               padding: "10px 25px", borderRadius: 6, cursor: "pointer", fontWeight: "bold"
             }}
           >
-            Approve (ส่งให้ Super)
+            Approve
           </button>
 
           <button
+            type="button"
             onClick={onReject}
             style={{
               backgroundColor: "#f44336", border: "none", color: "white",
