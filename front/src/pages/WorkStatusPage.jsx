@@ -5,7 +5,8 @@ import ProfileHeader from "../components/ProfileHeader";
 import NormalCard from "../components/NormalCard";
 import "./StatusPage.css";
 
-import { getMyPortfolios, updateVisibility } from "../api/portfolio";
+import { getMyPortfolios, updateVisibility } from "../api/portfolio-v2.js";
+import { getCurrentUser } from '../api/user.js';
 
 const USE_BACKEND = String(process.env.REACT_APP_USE_BACKEND || "true").toLowerCase() === "true";
 
@@ -17,12 +18,11 @@ export default function WorkStatusPage({ showControls }) {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
 
-  // mock โปรไฟล์
-  const [profileData] = useState({
-    name: "Rainbow Pinky",
-    university: "KMUTT",
-    contact: "rainbowpink@kmutt.ac.th",
-  });
+ const [profileData, setProfileData] = useState({
+  name: "Loading...",
+  university: "Loading...",
+  contact: "Loading...",
+});
 
   useEffect(() => {
     let alive = true;
