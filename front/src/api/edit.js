@@ -1,5 +1,5 @@
 // src/api/edit.js
-const BASE = ""; // ใช้ CRA proxy (setupProxy ชี้ไป :3000 อยู่แล้ว)
+const BASE = "http://localhost:3000"; // ใช้ CRA proxy (setupProxy ชี้ไป :3000 อยู่แล้ว)
 
 export async function editPortfolio(id, formData, token) {
   const res = await fetch(`${BASE}/api/portfolio/${id}/edit`, {
@@ -14,3 +14,4 @@ export async function editPortfolio(id, formData, token) {
   if (!res.ok) throw new Error(data.message || "Update failed");
   return data;
 }
+

@@ -1,5 +1,5 @@
 // src/api/resubmit.js
-const BASE = "";
+const BASE = "http://localhost:3000";
 
 /**
  * Resubmit portfolio

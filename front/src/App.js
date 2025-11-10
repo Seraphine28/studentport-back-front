@@ -37,8 +37,8 @@ export default function App() {
       {/* หรืออยากใช้ /student/upload ก็ได้: <Route path="/student/upload" element={<UploadPortfolio />} /> */}
       <Route path="/student/status" element={<WorkStatusPage showControls={true} />} />
       <Route path="/student/edit/:id" element={<EditPage />} />
-      <Route path="/student/resubmit" element={<StudentResubmit />} />
-      <Route path="/student/fail-status-error" element={<PortfolioFail />} />
+      <Route path="/student/resubmit/:id" element={<StudentResubmit />} />
+      <Route path="/student/fail-status-error/:id" element={<PortfolioFail />} />
 
       {/* 🔓 Public detail สำหรับการ์ดในหน้า Home */}
       <Route path="/project/:id/public" element={<CommentPage />} />

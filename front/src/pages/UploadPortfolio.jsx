@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import FileInput from "../components/FileInput";
 import { validateFiles } from "../utils/validators";
 import { uploadPortfolio } from "../api/upload";
+import { uploadPortfolioDraft } from "../api/portfolioDraft";
 
 // ตัวเลือกที่ backend อนุญาต
 const YEAR_OPTIONS = ["2020", "2021", "2022", "2023", "2024", "2025"];
@@ -25,6 +26,7 @@ export default function UploadPortfolio() {
     files: [],
   });
 
+  const [coverImage, setCoverImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,6 +40,12 @@ export default function UploadPortfolio() {
     fd.append("year", form.year);         // backend คาด "year"
     fd.append("category", form.category); // backend คาด "category"
     fd.append("desc", form.description);  // backend คาด "desc"
+    fd.append("submit", submitFlag);      // "true" => pending, "false" => draft
+
+    if (coverImage) {
+    fd.append("cover_img", coverImage);
+    }
+
     form.files.forEach((file) => fd.append("portfolioFiles", file)); // ชื่อคีย์ไฟล์
     fd.append("submit", submitFlag);      // "true" => pending, "false" => draft
     return fd;
@@ -48,6 +56,7 @@ export default function UploadPortfolio() {
     if (!form.title.trim()) return "กรุณากรอก Title";
     if (!YEAR_OPTIONS.includes(String(form.year))) return "กรุณาเลือกปีให้ถูกต้อง (2020–2025)";
     if (!CATEGORY_OPTIONS.includes(form.category)) return "กรุณาเลือก Category ให้ถูกต้อง";
+
 
     // ต้องมีอย่างน้อย 1 ไฟล์
     const fileCheck = validateFiles(form.files);
@@ -64,11 +73,24 @@ export default function UploadPortfolio() {
       setLoading(true);
       setError("");
 
-      const errMsg = validateBeforeSend(submitFlag === "true");
-      if (errMsg) throw new Error(errMsg);
+      // ตรวจเฉพาะตอน submit จริง (Upload)
+      if (submitFlag === "true") {
+        const errMsg = validateBeforeSend(true);
+        if (errMsg) throw new Error(errMsg);
+      }
+
+      if (submitFlag === "true" && !coverImage) {
+        throw new Error("กรุณาเลือก Cover Image");
+      }
+
+
 
       const fd = buildFormData(submitFlag);
-      const res = await uploadPortfolio(fd, token);
+      // 🔥 เลือก API ตามสถานะ
+      const res =
+        submitFlag === "true"
+          ? await uploadPortfolio(fd, token)
+          : await uploadPortfolioDraft(fd, token);
       // res: { message, data }
 
       if (submitFlag === "true") {
@@ -246,6 +268,27 @@ export default function UploadPortfolio() {
               ))}
             </select>
           </div>
+
+          {/* Cover Image */}
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>
+              Cover Image (Only image):
+          </label>
+          <input
+              type="file"
+              accept="image/*"   // กำหนดให้เลือกได้แค่ไฟล์รูป
+              onChange={(e) => setCoverImage(e.target.files[0] || null)}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#fff",
+              }}
+            />
+          </div>
+
 
           {/* Files */}
           <div>

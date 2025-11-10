@@ -1,152 +1,167 @@
-// ✅ ปรับ path import ให้ตรงตำแหน่งจริงของไฟล์ในโปรเจกต์หนู
-// ถ้าไฟล์นี้อยู่ที่ src/components/SuperAdmin/SuperReview.jsx
-// และ adminApi.js อยู่ที่ src/components/api/adminApi.js ให้ใช้ "../api/adminApi"
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  getPortfolioById,
-  superApprovePortfolio,
-  // superRejectPortfolio, // ❌ back ชุดนี้ไม่มี reject ฝั่ง Super
-} from "../../api/adminApi";
+import { getPortfolioForReview, reviewSuper } from "../../api/review";
 
 export default function SuperReview() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState("");
+
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await getPortfolioById(id); // GET /api/portfolio/:id
+        const data = await getPortfolioForReview(id, token);
         setPortfolio(data);
-      } catch (err) {
-        console.error("load portfolio error:", err);
+      } catch (e) {
+        console.error("load portfolio error:", e);
         setError("ไม่สามารถโหลดข้อมูล Portfolio ได้ (อาจต้องมี token หรือ route ไม่ตรง)");
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, token]);
 
-  const handleApprove = async () => {
+  const onApprove = async () => {
     try {
-      await superApprovePortfolio(id); // PUT /api/portfoliosuper/:id/approve ผ่าน proxy
-      alert("✅ Approved");
+      await reviewSuper(id, "approve", {}, token);
       navigate("/super/verify");
-    } catch (err) {
-      console.error(err);
-      setError("Approve failed (อาจไม่มี token / สิทธิ์ไม่พอ)");
+    } catch (e) {
+      setError(e.message || "Approve ล้มเหลว");
     }
   };
 
-  // ❌ back ปัจจุบันไม่รองรับ reject ที่ขั้น Super
-  const handleReject = () => {
-    alert("ขั้น Super ยังไม่มี endpoint สำหรับ Reject ใน backend นี้ค่ะ");
+  const onReject = async () => {
+    if (!feedback.trim()) {
+      setError("กรุณาใส่ Feedback ก่อน Reject");
+      return;
+    }
+    try {
+      await reviewSuper(id, "reject", { feedback: feedback.trim() }, token);
+      navigate("/super/verify");
+    } catch (e) {
+      setError(e.message || "Reject ล้มเหลว");
+    }
   };
 
   if (loading) return <p style={{ textAlign: "center" }}>⏳ Loading...</p>;
-  if (error) return <p style={{ color: "red", textAlign: "center" }}>{error}</p>;
   if (!portfolio) return <p style={{ textAlign: "center" }}>ไม่พบข้อมูลพอร์ต</p>;
 
-  // ช่วยแสดงไฟล์: backend ส่งเป็นพาธสตริง เช่น "uploads/abc.pdf"
   const files = Array.isArray(portfolio.files) ? portfolio.files : [];
-  const fileName = (p) => (typeof p === "string" ? p.split(/[\\/]/).pop() : String(p));
+  const fileName = (f) => (typeof f === "string" ? f.split(/[\\/]/).pop() : f?.name || `file`);
 
   return (
     <div style={{
-      height: "100vh", width: "100%", display: "flex", justifyContent: "center",
-      flexDirection: "column", boxSizing: "border-box", backgroundColor: "#ffc1cc",
-      overflow: "hidden", position: "relative", padding: 20, fontSize: 20, fontFamily: "sans-serif"
+      height: "100vh",
+      width: "100%",
+      display: "flex",
+      justifyContent: "center",
+      flexDirection: "column",
+      boxSizing: "border-box",
+      backgroundColor: "#fff1b8",
+      overflow: "hidden",
+      position: "relative",
+      padding: 20,
+      fontSize: 20,
+      fontFamily: "sans-serif"
     }}>
-      {/* กากบาทปิด */}
+      {/* ปุ่มปิด */}
       <button
         onClick={() => navigate("/super/verify")}
         style={{
-          position: "absolute", top: 20, right: 20, border: "none",
-          background: "transparent", fontSize: 50, fontWeight: "bold",
-          cursor: "pointer", color: "#ffffff"
+          position: "absolute",
+          top: 20,
+          right: 20,
+          border: "none",
+          background: "transparent",
+          fontSize: 50,
+          fontWeight: "bold",
+          cursor: "pointer",
+          color: "#444"
         }}
       >×</button>
 
       <div style={{
-        width: "100%", maxWidth: 1000, height: "100%", borderRadius: 12, padding: 20,
-        boxSizing: "border-box", margin: "0 auto", display: "flex", flexDirection: "column",
-        backgroundColor: "#ffc1cc", overflowY: "auto",
+        width: "100%",
+        maxWidth: 1000,
+        height: "100%",
+        borderRadius: 12,
+        padding: 20,
+        boxSizing: "border-box",
+        margin: "0 auto",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#fff1b8",
+        overflowY: "auto",
       }}>
         <style>{`
           ::-webkit-scrollbar { width: 8px; }
           ::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 4px; }
-          ::-webkit-scrollbar-thumb { background-color: #85a2bf; border-radius: 4px; }
+          ::-webkit-scrollbar-thumb { background-color: #bfbfbf; border-radius: 4px; }
         `}</style>
 
-        {/* Title */}
-        <div style={{ marginBottom: 10, color: "white" }}>
-          <label>Title:</label>
-          <input
-            type="text"
-            value={portfolio.title || ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
+        {error && (
+          <div style={{
+            marginBottom: 12,
+            padding: "10px 12px",
+            borderRadius: 8,
+            background: "#ffe6e6",
+            color: "#c62828",
+            border: "1px solid #ffcdd2",
+            fontSize: 14,
+          }}>{error}</div>
+        )}
 
-        {/* University */}
-        <div style={{ marginBottom: 10, color: "white" }}>
-          <label>University:</label>
-          <input
-            type="text"
-            value={portfolio.university || portfolio.owner?.university || ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
+        {/* Fields */}
+        {["title", "university", "year", "category"].map((key) => (
+          <div key={key} style={{ marginBottom: 10 }}>
+            <label>{key.charAt(0).toUpperCase() + key.slice(1)}:</label>
+            <input
+              type="text"
+              value={key === "university" ? (portfolio.university || portfolio.owner?.university || "") : portfolio[key] || ""}
+              readOnly
+              style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
+            />
+          </div>
+        ))}
 
-        {/* Year */}
-        <div style={{ marginBottom: 10, color: "white" }}>
-          <label>Year:</label>
-          <input
-            type="text"
-            value={portfolio.year ?? ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
-
-        {/* Category */}
-        <div style={{ marginBottom: 10, color: "white" }}>
-          <label>Category:</label>
-          <input
-            type="text"
-            value={portfolio.category || ""}
-            readOnly
-            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
-          />
-        </div>
-
-        {/* Attached Files */}
-        <div style={{ marginBottom: 15, color: "white" }}>
-          <label>Attached Files:</label>
-          {files.length === 0 ? (
-            <p>-</p>
+        {/* Cover Image */}
+        <div style={{ marginBottom: 15 }}>
+          <label>Cover Image:</label>
+          {portfolio.cover_img ? (
+            <img
+              src={portfolio.cover_img}
+              alt="Cover"
+              style={{ maxWidth: "100%", borderRadius: 6, border: "1px solid #ccc" }}
+            />
           ) : (
+            <div style={{ padding: 8, border: "1px solid #ccc", borderRadius: 6, background: "#fff", color: "#222" }}>
+              (no cover image)
+            </div>
+          )}
+        </div>
+
+        {/* Files */}
+        <div style={{ marginBottom: 15 }}>
+          <label>Attached Files:</label>
+          {files.length === 0 ? <p>-</p> : (
             <ul style={{ paddingLeft: 20 }}>
-              {files.map((p, idx) => (
+              {files.map((f, idx) => (
                 <li key={idx}>
-                  {/* ถ้า backend เสิร์ฟไฟล์ได้ ให้เปลี่ยน href เป็น `/` + พาธไฟล์ */}
-                  <a href="#" onClick={(e)=>e.preventDefault()}>
-                    {fileName(p)}
-                  </a>
+                  <a href={f?.url || "#"} target="_blank" rel="noreferrer">{fileName(f)}</a>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        {/* Description (field จริงคือ desc) */}
-        <div style={{ marginBottom: 15, color: "white" }}>
+        {/* Description */}
+        <div style={{ marginBottom: 15 }}>
           <label>Description:</label>
           <textarea
             value={portfolio.desc || ""}
@@ -155,29 +170,36 @@ export default function SuperReview() {
           />
         </div>
 
+        {/* Feedback */}
+        <div style={{ marginBottom: 15 }}>
+          <label>Feedback (for Reject):</label>
+          <textarea
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            placeholder="ใส่เหตุผลในการ Reject (บังคับ)"
+            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc", resize: "none" }}
+          />
+        </div>
+
         {/* Buttons */}
         <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
           <button
-            onClick={handleApprove}
+            type="button"
+            onClick={onApprove}
             style={{
               backgroundColor: "#4CAF50", border: "none", color: "white",
               padding: "10px 25px", borderRadius: 6, cursor: "pointer", fontWeight: "bold"
             }}
-          >
-            Approve
-          </button>
+          >Approve</button>
 
           <button
-            onClick={handleReject}
+            type="button"
+            onClick={onReject}
             style={{
-              backgroundColor: "#9e9e9e", border: "none", color: "white",
-              padding: "10px 25px", borderRadius: 6, cursor: "not-allowed", fontWeight: "bold"
+              backgroundColor: "#f44336", border: "none", color: "white",
+              padding: "10px 25px", borderRadius: 6, cursor: "pointer", fontWeight: "bold"
             }}
-            disabled
-            title="backend ปัจจุบันไม่รองรับ Reject ในขั้น Super"
-          >
-            Reject
-          </button>
+          >Reject</button>
         </div>
       </div>
     </div>

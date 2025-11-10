@@ -1,16 +1,21 @@
 // src/pages/StudentResubmit.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FileInput from "../components/FileInput";
 import { validateFiles } from "../utils/validators";
 import { resubmitPortfolio } from "../api/resubmit";
-import { getMyPortfolios } from "../api/portfolio";
+import { getMyPortfolios } from "../api/portfolio"; // ดึง /mine
+
+const YEAR_OPTIONS = ["2020", "2021", "2022", "2023", "2024", "2025"];
+const CATEGORY_OPTIONS = [
+  "AI", "ML", "BI", "QA", "UX/UI", "Database", "Software Engineering",
+  "IOT", "Gaming", "Web Development", "Coding", "Data Science",
+  "Hackathon", "Bigdata", "Data Analytics"
+];
 
 export default function StudentResubmit() {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // NOTE: ทำให้ year/category เป็นสตริงเดียว (ให้ตรงกับ back)
   const [form, setForm] = useState({
     title: "",
     university: "KMUTT",
@@ -19,171 +24,89 @@ export default function StudentResubmit() {
     description: "",
     files: [],
   });
-
-  const [loading, setLoading] = useState(false);
+  const [coverImage, setCoverImage] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // popup filter เดิมยังใช้ได้ แต่ internal เป็นสตริง
-  const [showYearPopup, setShowYearPopup] = useState(false);
-  const [showCategoryPopup, setShowCategoryPopup] = useState(false);
-  const yearRef = useRef(null);
-  const catRef = useRef(null);
-
-  const filters = {
-    yearOptions: ["2020", "2021", "2022", "2023", "2024", "2025"],
-    categoryOptions: [
-      "AI", "ML", "BI", "QA", "UX/UI", "Database", "Software Engineering",
-      "IOT", "Gaming", "Web Development", "Coding", "Data Science",
-      "Hackathon", "Bigdata", "Data Analytics",
-    ],
-  };
-
-  // โหลดข้อมูลเดิมมากรอก (ถ้าเรียกไม่ได้ → mock)
+  // โหลดพอร์ตที่ reject แล้วมาแก้ไข
   useEffect(() => {
+    const token = localStorage.getItem("token") || undefined;
     let alive = true;
     (async () => {
       try {
-        const data = await getMyPortfolios(id); // ถ้ายังไม่มี endpoint นี้จะ throw
+        const allPortfolios = await getMyPortfolios(token);
         if (!alive) return;
-        setForm((f) => ({
-          ...f,
-          title: data?.title || "",
-          university: data?.university || "KMUTT",
-          year: String(data?.year ?? data?.yearOfProject ?? "") || "",
-          category: data?.category || "",
-          description: data?.desc || data?.description || "",
-          files: Array.isArray(data?.files) ? data.files : [],
-        }));
-      } catch (e) {
-        // fallback mock เพื่อให้เทส UI ได้
-        if (!alive) return;
-        setForm((f) => ({
-          ...f,
-          title: "Mock Portfolio Title",
-          university: "KMUTT",
-          year: "2024",
-          category: "Design",
-          description: "This is mock portfolio content for testing.",
-          files: [],
-        }));
+
+        const data = allPortfolios.find(p => p._id === id && p.status === "rejected");
+        if (!data) {
+          setError("Portfolio นี้ไม่สามารถแก้ไขได้หรือไม่พบข้อมูล");
+          return;
+        }
+
+        setForm({
+          title: data.title || "",
+          university: data.university || "KMUTT",
+          year: String(data.year || ""),
+          category: data.category || "",
+          description: data.desc || "",
+          files: Array.isArray(data.files) ? data.files : [],
+        });
+
+        if (data.cover_img) {
+          setCoverImage(data.cover_img);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("ไม่สามารถโหลดข้อมูล Portfolio ได้");
       }
     })();
     return () => { alive = false; };
   }, [id]);
 
-  // รับไฟล์จาก FileInput
-  const handleFileChange = (files) => setForm((s) => ({ ...s, files }));
+  const onFilesChange = (files) => setForm((f) => ({ ...f, files }));
 
-  // เลือกค่าใน popup (ทำเป็นสตริงเดียว)
-  const renderSingleSelect = (label, value, setValue, show, setShow, options, ref) => (
-    <div
-      ref={ref}
-      style={{ display: "flex", flexDirection: "column", width: "100%", marginBottom: 6, fontSize: 12, position: "relative" }}
-    >
-      <label style={{ color: "white", marginBottom: 4, fontSize: 20 }}>{label}</label>
-      <div style={{ position: "relative", width: "100%" }}>
-        <div
-          onClick={() => setShow(!show)}
-          style={{
-            width: "100%",
-            padding: 10,
-            borderRadius: 8,
-            border: "1px solid #ccc",
-            background: "#fff",
-            cursor: "pointer",
-            fontSize: 12,
-            boxSizing: "border-box",
-          }}
-        >
-          {value || "Select..."}
-          <span
-            style={{
-              position: "absolute",
-              right: 10,
-              top: "50%",
-              transform: show ? "translateY(-50%) rotate(180deg)" : "translateY(-50%) rotate(0deg)",
-              fontSize: 12,
-              transition: "transform 0.2s",
-              userSelect: "none",
-            }}
-          >
-            ▼
-          </span>
-        </div>
+  function buildFormData() {
+    const fd = new FormData();
+    fd.append("title", form.title.trim());
+    fd.append("university", form.university);
+    fd.append("year", form.year);
+    fd.append("category", form.category);
+    fd.append("desc", form.description);
+    fd.append("submit", "true");
 
-        {show && options && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              width: "100%",
-              background: "#fff",
-              border: "1px solid #ccc",
-              borderRadius: 8,
-              zIndex: 10,
-              marginTop: 2,
-              maxHeight: 150,
-              overflowY: "auto",
-            }}
-          >
-            {options.map((opt) => (
-              <div
-                key={opt}
-                onClick={() => {
-                  setValue(opt);
-                  setShow(false);
-                }}
-                style={{
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                  background: value === opt ? "#d8e9ff" : "white",
-                  fontWeight: value === opt ? "bold" : "normal",
-                }}
-              >
-                {opt}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    if (coverImage instanceof File) fd.append("cover_img", coverImage);
+    form.files.forEach((file) => fd.append("portfolioFiles", file));
 
-  // ปิด popup เมื่อคลิกนอก
-  useEffect(() => {
-    const onClick = (e) => {
-      if (yearRef.current && !yearRef.current.contains(e.target)) setShowYearPopup(false);
-      if (catRef.current && !catRef.current.contains(e.target)) setShowCategoryPopup(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+    return fd;
+  }
 
-  // ส่งฟอร์ม Resubmit → ตรงกับ back: POST /api/portfolio  (files: portfolioFiles)
+  function validateBeforeSend() {
+    if (!form.title.trim()) return "กรุณากรอก Title";
+    if (!YEAR_OPTIONS.includes(String(form.year))) return "กรุณาเลือกปีให้ถูกต้อง (2020–2025)";
+    if (!CATEGORY_OPTIONS.includes(form.category)) return "กรุณาเลือก Category ให้ถูกต้อง";
+
+    const fileCheck = validateFiles(form.files);
+    if (!fileCheck.ok) return fileCheck.msg;
+
+    if (!coverImage) return "กรุณาเลือก Cover Image";
+
+    return "";
+  }
+
   const handleResubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem("token") || undefined;
 
-    const v = validateFiles(form.files);
-    if (!v.ok) return setError(v.msg);
+    const errMsg = validateBeforeSend();
+    if (errMsg) return setError(errMsg);
 
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
-      const fd = new FormData();
-      fd.append("title", form.title.trim());
-      fd.append("desc", form.description.trim());
-      fd.append("university", form.university || "KMUTT");
-      fd.append("year", String(form.year || "").trim());        // back รับชื่อ year
-      fd.append("category", String(form.category || "").trim());
-      fd.append("submit", "true");                               // ให้เป็น pending
-
-      // ชื่อคีย์ไฟล์ต้องเป็น portfolioFiles ให้ตรงกับ upload.array("portfolioFiles", 10)
-      form.files.forEach((file) => fd.append("portfolioFiles", file));
-
-      await resubmitPortfolio(id, fd); // ฟังก์ชันนี้ต้องยิงไปที่ POST /api/portfolio ภายใน
-      navigate("/student/home");
+      const fd = buildFormData();
+      await resubmitPortfolio(id, fd, token);
+      navigate("/student/status");
     } catch (err) {
       setError(err.message || "Resubmit failed");
     } finally {
@@ -194,136 +117,228 @@ export default function StudentResubmit() {
   return (
     <div
       style={{
-        height: "100vh",
-        width: "100%",
-        backgroundColor: "#fd9061ff",
+        minHeight: "100vh",
+        backgroundColor: "#fd9061",
         display: "flex",
         justifyContent: "center",
-        flexDirection: "column",
-        boxSizing: "border-box",
-        overflow: "hidden",
-        position: "relative",
         padding: 20,
-        fontSize: 20,
+        boxSizing: "border-box",
         fontFamily: "sans-serif",
       }}
     >
-      {/* ปุ่มปิด */}
-      <button
-        onClick={() => navigate("/student/fail-status-error")}
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 20,
-          border: "none",
-          background: "transparent",
-          fontSize: 50,
-          fontWeight: "bold",
-          cursor: "pointer",
-          color: "#ffffffff",
-        }}
-      >
-        ×
-      </button>
-
       <div
         style={{
           width: "100%",
           maxWidth: 1000,
-          height: "100%",
-          backgroundColor: "#fd9061ff",
-          borderRadius: 12,
+          background: "#fd9061",
           padding: 20,
-          boxSizing: "border-box",
-          margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
+          borderRadius: 12,
         }}
       >
-        <style>
-          {`
-            ::-webkit-scrollbar { width: 8px; }
-            ::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 4px; }
-            ::-webkit-scrollbar-thumb { background-color: #85a2bfff; border-radius: 4px; }
-          `}
-        </style>
+        {/* ปุ่มปิด */}
+        <button
+          onClick={() => navigate("/student/home")}
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            border: "none",
+            background: "transparent",
+            fontSize: 40,
+            fontWeight: "bold",
+            cursor: "pointer",
+            color: "#fff",
+            lineHeight: 1,
+          }}
+          aria-label="close"
+          title="Close"
+        >
+          ×
+        </button>
 
         <h2
           style={{
             textAlign: "center",
-            color: "#050403ff",
-            marginBottom: 10,
-            fontSize: 55,
+            color: "#5b8db8",
+            marginBottom: 16,
+            fontSize: 52,
             fontWeight: "bold",
-            fontFamily: "Poppins",
+            fontFamily: "Poppins, sans-serif",
           }}
         >
-          Edit Portfolio
+          Resubmit Portfolio
         </h2>
 
-        {error && <div style={{ color: "red", marginBottom: 15 }}>{error}</div>}
+        {error && (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "#ffe6e6",
+              color: "#c62828",
+              border: "1px solid #ffcdd2",
+              fontSize: 14,
+            }}
+          >
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleResubmit} style={{ display: "flex", flexDirection: "column" }}>
+        <form onSubmit={handleResubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Title */}
-          <div style={{ marginBottom: 6 }}>
-            <label style={{ color: "white", display: "block", marginBottom: 4 }}>Title :</label>
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>Title :</label>
             <input
               value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", boxSizing: "border-box" }}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              placeholder="เช่น Smart IoT Home Controller"
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#fff",
+              }}
             />
           </div>
 
-          {/* University */}
-          <div style={{ marginBottom: 10, color: "white" }}>
-            <label>University:</label>
+          {/* University (read-only) */}
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>University :</label>
             <input
-              type="text"
               value={form.university}
               readOnly
-              style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #ccc", boxSizing: "border-box" }}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#f7f7f7",
+                color: "#444",
+              }}
             />
           </div>
 
-          {/* Year / Category (single-select) */}
-          {renderSingleSelect("Year of project/work/prize :", form.year, (v) => setForm({ ...form, year: v }),
-            showYearPopup, setShowYearPopup, filters.yearOptions, yearRef)}
+          {/* Year */}
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>Year of project/work/prize :</label>
+            <select
+              value={form.year}
+              onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#fff",
+              }}
+            >
+              <option value="">Select...</option>
+              {YEAR_OPTIONS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {renderSingleSelect("Category :", form.category, (v) => setForm({ ...form, category: v }),
-            showCategoryPopup, setShowCategoryPopup, filters.categoryOptions, catRef)}
+          {/* Category */}
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>Category :</label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#fff",
+              }}
+            >
+              <option value="">Select...</option>
+              {CATEGORY_OPTIONS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Cover Image */}
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>
+              Cover Image (Only image):
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setCoverImage(e.target.files[0] || coverImage)}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#fff",
+              }}
+            />
+            {coverImage && typeof coverImage === "string" && (
+              <img
+                src={coverImage}
+                alt="Current cover"
+                style={{ marginTop: 8, maxHeight: 150, borderRadius: 8 }}
+              />
+            )}
+          </div>
 
           {/* Files */}
-          <div style={{ marginBottom: 6 }}>
-            <label style={{ color: "white", display: "block", marginBottom: 4 }}>
-              Attach Files (at least one picture max ten picture) :
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>
+              Attach Files (อย่างน้อย 1 รูป สูงสุด 10 รูป):
             </label>
-            <FileInput files={form.files} onChange={handleFileChange} />
+            <FileInput files={form.files} onChange={onFilesChange} />
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: 6 }}>
-            <label style={{ color: "white", display: "block", marginBottom: 4 }}>Description :</label>
+          <div>
+            <label style={{ color: "white", display: "block", marginBottom: 6 }}>Description :</label>
             <textarea
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", boxSizing: "border-box" }}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="สรุปผลงาน และรายละเอียดสำคัญ"
+              rows={5}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+                background: "#fff",
+                resize: "vertical",
+              }}
             />
           </div>
 
           {/* Submit */}
-          <div style={{ margin: "0 auto", marginTop: 15 }}>
+          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
             <button
               type="submit"
               disabled={loading}
               style={{
-                width: 220,
-                padding: 10,
+                flex: 1,
+                padding: 12,
                 borderRadius: 8,
                 fontSize: 16,
-                border: "1px solid #edd54eff",
-                background: "#ffd900ff",
-                color: "#000000ff",
+                border: "1px solid #5b8db8",
+                background: "#5b8db8",
+                color: "#fff",
+                cursor: "pointer",
               }}
             >
               {loading ? "Resubmitting..." : "Resubmit"}

@@ -1,5 +1,5 @@
 // src/api/fail.js
-const BASE = "";
+const BASE = "http://localhost:3000";
 
 function authHeader(token) {
   return token ? { Authorization: `Bearer ${token}` } : {};
